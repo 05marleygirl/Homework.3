@@ -1,0 +1,30 @@
+B 3 C o m p i l a t i o n
+B 96 Equation Listing    SOLVE ReservoirOps Using LP From line 84
+D 99 PROFIT
+D 104 MassBalance
+D 113 CapBound
+D 122 EndStorage
+B 128 Column Listing      SOLVE ReservoirOps Using LP From line 84
+E 131 D
+E 149 S
+E 170 Spill
+E 185 VPROFIT
+B 193 Range Statistics    SOLVE ReservoirOps Using LP From line 84
+B 204 Model Statistics    SOLVE ReservoirOps Using LP From line 84
+B 217 Solution Report     SOLVE ReservoirOps Using LP From line 84
+F 250 PROFIT
+F 252 MassBalance
+F 260 CapBound
+F 270 EndStorage
+G 272 D
+G 280 S
+G 288 Spill
+G 298 VPROFIT
+B 306 E x e c u t i o n
+I 306 D
+I 312 S
+I 317 Spill
+I 323 VPROFIT
+I 324 MassBalance
+I 329 CapBound
+I 335 EndStorage

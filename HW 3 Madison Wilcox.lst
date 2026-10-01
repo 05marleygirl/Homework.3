@@ -1,0 +1,350 @@
+GAMS 54.4.0  9a60ae27 Sep 9, 2026           WEX-WEI x86 64bit/MS Windows - 10/01/26 15:48:05 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+      CEE 6410 - Water Resources Systems Analysis
+      HW3 - Reservoir Operation Problem
+       
+      THE PROBLEM:
+      A reservoir is designed to provide water for irrigation.  The reservoir has a capacity of 9,000 acre-feet.
+      Initial storage is 3,000 acre-feet of water. The size of the diversion canal and farmed area is very large
+      relative to the amount of irrigation water available, so there is no upper limit on usable irrigation water.
+      Any water above the reservoir capacity must be released to the river (spill). The ending storage must be equal
+      to or greater than the begin¬ning storage.  The benefits per unit of water, and the estimated inflows to the
+      reservoir in 3 months are given in Table 1. What is the diversion schedule that maximizes benefits?
+       
+      Data:
+      Month     Inflow (ac-ft)    Benefit ($/ac-ft)
+      June      5,000             150
+      July      3,200             170
+      August    2,000             425
+       
+      Initial Storage: 3,000 ac-ft
+      Max Storage:     9,000 ac-ft
+      Ending Storage:  >= 3,000 ac-ft
+       
+      Madison Wilcox
+      9/29/26
+  26   
+  27  * 1. DEFINE the SETS
+  28  SETS t Time periods (months) / June, July, August /;
+  29   
+  30  * 2. DEFINE input data
+  31  SCALARS
+  32     S_init Initial reservoir storage at start of June (ac-ft) / 3000 /
+  33     S_max  Maximum reservoir storage capacity (ac-ft)         / 9000 /;
+  34   
+  35  PARAMETERS
+  36     Inflow(t) Forecasted monthly inflows (ac-ft)
+  37           / June    5000,
+  38             July    3200,
+  39             August  2000 /
+  40   
+  41     Benefit(t) Economic benefit per unit of diverted water ($ per ac-ft)
+  42           / June    150,
+  43             July    170,
+  44             August  425 /;
+  45   
+  46  * 3. DEFINE the variables
+  47  VARIABLES
+  48     D(t)
+  49     S(t)
+  50     Spill(t)
+  51     VPROFIT  ;
+  52   
+  53  * Non-negativity constraints
+  54  POSITIVE VARIABLES D, S, Spill;
+  55   
+  56  * 4. COMBINE variables and data in equations
+  57  EQUATIONS
+  58     PROFIT
+  59     MassBalance(t)
+  60     CapBound(t)
+  61     EndStorage     ;
+  62   
+  63  * Objective Function
+  64  PROFIT..
+  65     VPROFIT =E= SUM(t, Benefit(t) * D(t));
+  66   
+  67  * Mass Balance Equation: Storage_t = Storage_t-1 + Inflow_t - Diversion_t - Spill_t
+  68  MassBalance(t)..
+  69     S(t) =E= (S_init$SAMEAS(t,'June') + S(t-1)$(NOT SAMEAS(t,'June')))
+  70              + Inflow(t) - D(t) - Spill(t);
+  71   
+  72  * Reservoir Capacity Constraint
+  73  CapBound(t)..
+  74     S(t) =L= S_max;
+  75   
+  76  * Ending Storage Constraint: August ending storage >= Initial June storage
+  77  EndStorage..
+  78     S('August') =G= S_init;
+  79   
+  80  * 5. DEFINE the MODEL from the EQUATIONS
+  81  MODEL ReservoirOps / ALL /;
+  82   
+  83  * 6. SOLVE the MODEL
+  84  SOLVE ReservoirOps USING LP MAXIMIZING VPROFIT;
+  85   
+  86  * 7. DISPLAY RESULTS
+  87  DISPLAY D.L, S.L, Spill.L, VPROFIT.L, MassBalance.M, CapBound.M, EndStorage.M;
+
+
+COMPILATION TIME     =        0.015 SECONDS      3 MB  54.4.0 9a60ae27 WEX-WEI
+GAMS 54.4.0  9a60ae27 Sep 9, 2026           WEX-WEI x86 64bit/MS Windows - 10/01/26 15:48:05 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE ReservoirOps Using LP From line 84
+
+
+---- PROFIT  =E=  
+
+PROFIT..  - 150*D(June) - 170*D(July) - 425*D(August) + VPROFIT =E= 0 ; (LHS = 0)
+     
+
+---- MassBalance  =E=  
+
+MassBalance(June)..  D(June) + S(June) + Spill(June) =E= 8000 ; (LHS = 0, INFES = 8000 ****)
+     
+MassBalance(July)..  D(July) - S(June) + S(July) + Spill(July) =E= 3200 ; (LHS = 0, INFES = 3200 ****)
+     
+MassBalance(August)..  D(August) - S(July) + S(August) + Spill(August) =E= 2000 ; (LHS = 0, INFES = 2000 ****)
+     
+
+---- CapBound  =L=  
+
+CapBound(June)..  S(June) =L= 9000 ; (LHS = 0)
+     
+CapBound(July)..  S(July) =L= 9000 ; (LHS = 0)
+     
+CapBound(August)..  S(August) =L= 9000 ; (LHS = 0)
+     
+
+---- EndStorage  =G=  
+
+EndStorage..  S(August) =G= 3000 ; (LHS = 0, INFES = 3000 ****)
+     
+GAMS 54.4.0  9a60ae27 Sep 9, 2026           WEX-WEI x86 64bit/MS Windows - 10/01/26 15:48:05 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE ReservoirOps Using LP From line 84
+
+
+---- D  
+
+D(June)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+     -150       PROFIT
+        1       MassBalance(June)
+
+D(July)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+     -170       PROFIT
+        1       MassBalance(July)
+
+D(August)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+     -425       PROFIT
+        1       MassBalance(August)
+
+
+---- S  
+
+S(June)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MassBalance(June)
+       -1       MassBalance(July)
+        1       CapBound(June)
+
+S(July)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MassBalance(July)
+       -1       MassBalance(August)
+        1       CapBound(July)
+
+S(August)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MassBalance(August)
+        1       CapBound(August)
+        1       EndStorage
+
+
+---- Spill  
+
+Spill(June)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MassBalance(June)
+
+Spill(July)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MassBalance(July)
+
+Spill(August)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       MassBalance(August)
+
+
+---- VPROFIT  
+
+VPROFIT
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       PROFIT
+
+GAMS 54.4.0  9a60ae27 Sep 9, 2026           WEX-WEI x86 64bit/MS Windows - 10/01/26 15:48:05 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE ReservoirOps Using LP From line 84
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.000E+03, 9.000E+03] - Zero values observed as well
+Bound     [min, max] : [        NA,        NA] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 4.250E+02]
+
+GAMS 54.4.0  9a60ae27 Sep 9, 2026           WEX-WEI x86 64bit/MS Windows - 10/01/26 15:48:05 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE ReservoirOps Using LP From line 84
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS            8
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES           10
+NON ZERO ELEMENTS            19
+
+
+GENERATION TIME      =        0.110 SECONDS      4 MB  54.4.0 9a60ae27 WEX-WEI
+GAMS 54.4.0  9a60ae27 Sep 9, 2026           WEX-WEI x86 64bit/MS Windows - 10/01/26 15:48:05 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE ReservoirOps Using LP From line 84
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   ReservoirOps        OBJECTIVE  VPROFIT
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  84
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE          3774000.0000
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+*** This solver runs with a community license.
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.01 ticks)
+
+
+Optimal solution found
+Objective:      3774000.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU PROFIT              .              .              .             1.0000      
+
+---- EQU MassBalance  
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+June        8000.0000      8000.0000      8000.0000       170.0000      
+July        3200.0000      3200.0000      3200.0000       170.0000      
+August      2000.0000      2000.0000      2000.0000       425.0000      
+
+---- EQU CapBound  
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+June          -INF         8000.0000      9000.0000          .          
+July          -INF         9000.0000      9000.0000       255.0000      
+August        -INF         3000.0000      9000.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU EndStorage      3000.0000      3000.0000        +INF         -425.0000      
+
+---- VAR D  
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+June            .              .            +INF          -20.0000      
+July            .          2200.0000        +INF             .          
+August          .          8000.0000        +INF             .          
+
+---- VAR S  
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+June            .          8000.0000        +INF             .          
+July            .          9000.0000        +INF             .          
+August          .          3000.0000        +INF             .          
+
+---- VAR Spill  
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+June            .              .            +INF         -170.0000      
+July            .              .            +INF         -170.0000      
+August          .              .            +INF         -425.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR VPROFIT           -INF      3774000.0000        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 54.4.0  9a60ae27 Sep 9, 2026           WEX-WEI x86 64bit/MS Windows - 10/01/26 15:48:05 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     87 VARIABLE D.L  
+
+July   2200.000,    August 8000.000
+
+
+----     87 VARIABLE S.L  
+
+June   8000.000,    July   9000.000,    August 3000.000
+
+
+----     87 VARIABLE Spill.L  
+
+                      ( ALL       0.000 )
+
+
+----     87 VARIABLE VPROFIT.L             =  3774000.000  
+
+----     87 EQUATION MassBalance.M  
+
+June   170.000,    July   170.000,    August 425.000
+
+
+----     87 EQUATION CapBound.M  
+
+July 255.000
+
+
+----     87 EQUATION EndStorage.M          =     -425.000  
+
+
+EXECUTION TIME       =        0.438 SECONDS      4 MB  54.4.0 9a60ae27 WEX-WEI
+
+
+USER: Course License                                 G260818+0003Ac-GEN
+      Utah State University                                     DCE5615
+      License for teaching and research at degree granting institutions
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\Wilcox\OneDrive - USU\Engineerring systems\Homework.3\HW 3 Madison Wilcox.gms
+Output     C:\Users\Wilcox\OneDrive - USU\Engineerring systems\Homework.3\HW 3 Madison Wilcox.lst
